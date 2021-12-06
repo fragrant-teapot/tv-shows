@@ -1,0 +1,42 @@
+version: '3.3'
+
+volumes:
+  logs:
+    driver: local
+
+services:
+  php:
+    build:
+      context: docker/php
+    working_dir: /var/www
+    command: php -S 0.0.0.0:8888 -t public
+    environment:
+      docker: "true"
+    ports:
+      - 8888:8888
+    volumes:
+      - ./:/var/www
+      - ./storage/logs:/var/www/logs
+    networks:
+      - tv
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_REG_USER: root
+      MYSQL_PORT: 3306
+      MYSQL_HOST: mysql
+      MYSQL_DATABASE: tv
+    volumes:
+      - ./db_init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - tv
+
+networks:
+  tv:
+    driver: bridge
